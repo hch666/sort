@@ -1,0 +1,341 @@
+/*6、排序算法比较 （必做）（排序）
+[问题描述]
+利用随机函数产生10个样本，每个样本有20000个随机整数（并使第一个样本是正序，第二个样本是逆序），
+利用直接插入排序、希尔排序，冒泡排序、快速排序、选择排序、堆排序，归并排序、基数排序8种排序方法
+进行排序（结果为由小到大的顺序），并统计每一种排序算法对不同样本所耗费的时间。
+ [基本要求]
+（1） 原始数据存在文件中，用相同样本对不同算法进行测试；
+（2） 屏幕显示每种排序算法对不同样本所花的时间；*/
+#include <iostream>
+#include <algorithm>
+#include <stdio.h>
+#include <fstream>
+#include <math.h>
+#include <string.h>
+#include <ctime>
+using namespace std;
+
+//////////////////////////////////////插入///////////////////////////////////////
+void Insert(int *a,int n){
+	int i,j,min;
+	for(i=0;i<n;i++){
+		for(j=i;j>0;j--){
+			if(a[j]<a[j-1]){
+				swap(a[j],a[j-1]);
+			}
+		}
+	}
+}
+
+/////////////////////////////////////希尔//////////////////////////////////////////
+void ShellInsert(int* a, int d, int n)
+{
+	for (int i = d; i < n; i += 1)    //从第2个数据开始插入
+	{
+		int j = i - d;
+		int temp = a[i];    //记录要插入的数据
+		while (j >= 0 && a[j] > temp)    //从后向前，找到比其小的数的位置
+		{
+			a[j+d] = a[j];    //向后挪动
+			j -= d;
+		}
+		if (j != i - d)    //存在比其小的数
+			a[j+d] = temp;
+	}
+}
+void ShellSort(int* a, int n)
+{
+	int d = n/ 2;    //初始增量设为数组长度的一半
+	while(d >= 1)
+	{
+		ShellInsert(a, d, n);
+		d = d / 2;    //每次增量变为上次的二分之一
+	}
+}
+//////////////////////////////////////冒泡//////////////////////////////////////////
+void maopao(int *a,int n){
+	int i,j;
+	for(i=0;i<n;i++){
+		for(j=1;j<n-i;j++){
+			if(a[j]<a[j-1])swap(a[j],a[j-1]);
+		}
+	}
+}
+
+/////////////////////////////////////////选择/////////////////////////////////////// 
+void select(int *a,int n){
+	int i,j,p;
+	for(i=0;i<n;i++){
+		p=i;
+		for(j=i;j<n;j++){
+			if(a[j]<a[p])p=j;
+		}
+		if(p!=i)swap(a[p],a[i]);
+	}
+	//cout<<"\n选择排序：\n";
+	//for(i=0;i<n;i++)cout<<a[i]<<" ";
+}
+
+/////////////////////////////////////////快速//////////////////////////////////// 
+void quicksort(int *a,int low, int high) {//快速 
+	int i,j, temp;
+	i=low;
+	j=high;
+	if(low > high)
+		return;
+    temp = a[low]; //temp中存的就是基准数
+    while(low<high) { //从数组两端交替向中间扫描 
+    	while(a[high] >= temp && low< high)	high--;
+    	a[low]=a[high];
+    	while(a[low] <= temp && low < high) low++;  
+		a[high]=a[low];
+    }
+    a[low] = temp;      //最终将基准数归位
+    quicksort(a,i, low-1);//继续处理低端的，这里是一个递归的过程
+    quicksort(a,low+1,j); //继续处理高端的 ，这里是一个递归的过程
+}
+
+///////////////////////////////////////堆排序//////////////////////////////////// 
+void HeapAdjust(int *a,int i,int size)  //调整堆 
+{
+    int lchild=2*i;       //i的左孩子节点序号 
+    int rchild=2*i+1;     //i的右孩子节点序号 
+    int max=i;            //临时变量 
+    if(i<=size/2)          //如果i是叶节点就不用进行调整 
+    {
+        if(lchild<=size&&a[lchild]>a[max])
+        {
+            max=lchild;
+        }    
+        if(rchild<=size&&a[rchild]>a[max])
+        {
+            max=rchild;
+        }
+        if(max!=i)
+        {
+            swap(a[i],a[max]);
+            HeapAdjust(a,max,size);    //避免调整之后以max为父节点的子树不是堆 
+        }
+    }        
+}
+void BuildHeap(int *a,int size)    //建立堆 
+{
+    int i;
+    for(i=size/2;i>=1;i--)    //非叶节点最大序号值为size/2 
+    {
+        HeapAdjust(a,i,size);    
+    }    
+} 
+void HeapSort(int *a,int size)    //堆排序 
+{
+    int i;
+    BuildHeap(a,size);
+    for(i=size;i>=1;i--)
+    {
+        //cout<<a[1]<<" ";
+        swap(a[1],a[i]);           //交换堆顶和最后一个元素，即每次将剩余元素中的最大者放到最后面 
+          //BuildHeap(a,i-1);        //将余下元素重新建立为大顶堆 
+          HeapAdjust(a,1,i-1);      //重新调整堆顶节点成为大顶堆
+    }
+}
+
+/////////////////////////////////////归并排序////////////////////////////////////// 
+//将有二个有序数列a[first...mid]和a[mid...last]合并。  
+void mergearray(int a[], int first, int mid, int last, int temp[])  
+{  
+    int i = first, j = mid + 1;  
+    int m = mid,   n = last;  
+    int k = 0;  
+      
+    while (i <= m && j <= n)  
+    {  
+        if (a[i] <= a[j])  
+            temp[k++] = a[i++];  
+        else  
+            temp[k++] = a[j++];  
+    }  
+      
+    while (i <= m)  
+        temp[k++] = a[i++];  
+      
+    while (j <= n)  
+        temp[k++] = a[j++];  
+      
+    for (i = 0; i < k; i++)  
+        a[first + i] = temp[i];
+	 
+}  
+void mergesort(int a[], int first, int last, int temp[])  
+{  
+    if (first < last)  
+    {  
+        int mid = (first + last) / 2;  
+        mergesort(a, first, mid, temp);    //左边有序  
+        mergesort(a, mid + 1, last, temp); //右边有序  
+        mergearray(a, first, mid, last, temp); //再将二个有序数列合并  
+    }  
+}
+
+//////////////////////////////基数排序////////////////////////////
+void LSDSort(int* arr,size_t n)
+{
+	int i,max=INT_MIN,digit;
+	for(i = 1 ;i < n;i++){
+		if(max < arr[i])
+			max = arr[i];
+	}
+	while(max){
+		max=max/10;
+		digit++;
+	}
+	int base = 1;
+	int* tmp = new int[n];
+	while (digit--)
+	{
+		int count[10] = { 0 };
+		//统计某一位出现相同数字的个数
+		for (size_t i = 0; i < n; i++)
+		{
+			int index = arr[i] / base % 10;
+			count[index]++;
+		}
+		int start[10] = { 0 };
+		//统计个位相同的数在数组arr中出现的位置
+		for (size_t i = 1; i < n; i++)
+		{
+			start[i] = count[i - 1] + start[i - 1];
+		}
+		//初始化tmp数组
+		memset(tmp, 0, n*sizeof(int));
+		//从桶中重新排序数据
+		for (size_t i = 0; i < n; ++i)
+		{
+			int index = arr[i] / base % 10;
+			tmp[start[index]++] = arr[i];
+		}
+		//将tmp数组中的元素拷回原数组
+		memcpy(arr, tmp, n*sizeof(int));
+		base *= 10;
+	}
+	delete[] tmp;
+}
+///////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////
+void Compare(int *a,int n){//调用每个排序算法比较时间 
+	int i,b[n];
+	double start,finish,time;
+	
+	for(i=0;i<n;i++)b[i]=a[i];
+	cout<<"插入排序:"; 
+	start=clock();
+	Insert(a,n);
+	finish=clock();
+	time=(double)(finish - start) / CLOCKS_PER_SEC;
+	cout<<time<<" ";
+	
+	for(i=0;i<n;i++)a[i]=b[i];
+	cout<<"希尔排序:"; 
+	start=clock();
+	ShellSort(a,n);
+	finish=clock();
+	time=(double)(finish - start) / CLOCKS_PER_SEC;
+	cout<<time<<" ";
+
+	for(i=0;i<n;i++)a[i]=b[i];
+	cout<<"冒泡排序:"; 
+	start=clock();
+	maopao(a,n);
+	finish=clock();
+	time=(double)(finish - start) / CLOCKS_PER_SEC;
+	cout<<time<<" ";
+	
+	for(i=0;i<n;i++)a[i]=b[i];
+	cout<<"选择排序:"; 
+	start=clock();
+	select(a,n);
+	finish=clock();
+	time=(double)(finish - start) / CLOCKS_PER_SEC;
+	cout<<time<<" ";
+	
+	for(i=0;i<n;i++)a[i]=b[i];
+	cout<<"快速排序:"; 
+	start=clock();
+	quicksort(a,0,n-1);
+	finish=clock();
+	time=(double)(finish - start) / CLOCKS_PER_SEC;
+	cout<<time<<" ";
+	
+    for(i=0;i<n;i++)a[i]=b[i];
+	cout<<"堆排序  :"; 
+	start=clock();
+	HeapSort(a,n);
+	finish=clock();
+	time=(double)(finish - start) / CLOCKS_PER_SEC;
+	cout<<time<<" ";
+	
+	for(i=0;i<n;i++)a[i]=b[i];
+	cout<<"归并排序:"; 
+	start=clock();
+	int d[n];
+	mergesort(a,0,n-1,d);
+	finish=clock();
+	time=(double)(finish - start) / CLOCKS_PER_SEC;
+	cout<<time<<" ";
+	cout<<endl;
+
+	/*for(i=0;i<n;i++)a[i]=b[i];
+	cout<<"基数排序:"; 
+	start=clock();
+	LSDSort(a,n);
+	finish=clock();
+	time=(double)(finish - start) / CLOCKS_PER_SEC;
+	cout<<time<<" ";
+	cout<<endl;*/
+	
+
+}
+
+void Choice(char choice){//根据choice从不同文件读取数据 
+	fstream f;
+	int i,n,a[20000];
+	char file[10]={"data1.txt"};
+	file[4]=choice;
+
+	f.open(file,ios::in);
+	if(f.fail())cout<<"打开文件失败！";
+	i=0;
+	while(!f.eof()){
+		f>>a[i];
+		i++;
+	}
+	f.close();	
+	n=i;
+	Compare(a,n); 
+	
+}
+void Cout(){
+	cout<<"不同样本下每种排序算法的时间情况：\n\n";
+	cout<<"正序： "; 
+	Choice('1');
+	cout<<"逆序： "; 
+	Choice('2');
+	cout<<"随机： "; 
+	Choice('3');
+	cout<<"随机： "; 
+	Choice('4');
+	cout<<"随机:  "; 
+	Choice('5');
+	cout<<"随机： "; 
+	Choice('6');
+	cout<<"随机： "; 
+	Choice('7');
+	cout<<"随机： "; 
+	Choice('9');
+	cout<<"随机： "; 
+	Choice('A');		
+} 
+int main(){
+	
+	Cout();
+	return 0;
+} 
